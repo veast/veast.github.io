@@ -1,7 +1,7 @@
 #footer-wrap
   if theme.footer.owner.enable
     - const currentYear = new Date().getFullYear()
-    - const sinceYear = theme.footer.owner.since
+    - const sinceYear = '2025'
     .copyright
       if sinceYear && sinceYear != currentYear
         != `&copy;${sinceYear} - ${currentYear} By ${config.author}`
