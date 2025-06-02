@@ -8,7 +8,7 @@ tags:
   - 理财
   - 人生
 categories:
-  - 公告
+  - 个人
 ---
 
 # Hello, World!
