@@ -1,12 +1,6 @@
 ---
 title: Hello, World!
 date: 2025-06-02 15:30:00
-tags:
-  - AI Infra
-  - ML Sys
-  - AI产品
-  - 理财
-  - 人生
 categories:
   - 个人
 ---
