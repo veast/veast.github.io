@@ -1,5 +1,5 @@
 ---
-title: Nvidia Dynamo, 全新的LLM分布式推理框架
+title: Nvidia Dynamo, 高效的LLM分布式推理框架
 date: 2025-06-02 19:41:20
 tags:
   - ML System
