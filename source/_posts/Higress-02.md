@@ -161,7 +161,7 @@ metadata:
     higress.io/resource-definer: higress
   annotations:
     higress.io/comment: PLEASE DO NOT EDIT DIRECTLY. This resource is managed by Higress.
-    higress.io/destination: llm-lololo-provider.internal.dns:30000  # 注意这里
+    higress.io/destination: llm-lololo.internal.dns:30000  # 注意这里
 spec:
   ingressClassName: higress
   rules:
@@ -188,7 +188,7 @@ metadata:
     higress.io/config-map-type: ai-route
     higress.io/resource-definer: higress
 data:
-  data: '{"name":"lololo","version":"14260326171","domains":["lololo.com"],"pathPredicate":{"matchType":"PRE","matchValue":"/v1"},"headerPredicates":[],"urlParamPredicates":[],"upstreams":[{"provider":"lololo-provider","weight":100,"modelMapping":{}}],"modelPredicates":[],"authConfig":{"enabled":true,"allowedConsumers":["labubu"]},"fallbackConfig":{"enabled":false}}'
+  data: '{"name":"lololo","version":"14260326171","domains":["lololo.com"],"pathPredicate":{"matchType":"PRE","matchValue":"/v1"},"headerPredicates":[],"urlParamPredicates":[],"upstreams":[{"provider":"lololo","weight":100,"modelMapping":{}}],"modelPredicates":[],"authConfig":{"enabled":true,"allowedConsumers":["labubu"]},"fallbackConfig":{"enabled":false}}'
 ```
 
 3.如果涉及认证，还需要配置key-auth.internal的extensions.higress.io/v1/alpha1/WasmPlugin，这里追加matchRules，声明规则支持的消费者
