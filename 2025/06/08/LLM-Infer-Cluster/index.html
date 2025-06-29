@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://veast.github.io/img/my-avatar.jpeg">
 <meta property="article:published_time" content="2025-06-08T14:11:05.000Z">
-<meta property="article:modified_time" content="2025-06-19T12:25:42.102Z">
+<meta property="article:modified_time" content="2025-06-29T15:15:56.390Z">
 <meta property="article:author" content="Veast">
 <meta property="article:tag" content="Cloud Native for AI">
 <meta property="article:tag" content="ML System">
@@ -20,7 +20,7 @@
   "url": "http://veast.github.io/2025/06/08/LLM-Infer-Cluster/",
   "image": "http://veast.github.io/img/my-avatar.jpeg",
   "datePublished": "2025-06-08T14:11:05.000Z",
-  "dateModified": "2025-06-19T12:25:42.102Z",
+  "dateModified": "2025-06-29T15:15:56.390Z",
   "author": [
     {
       "@type": "Person",
@@ -161,7 +161,15 @@
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/static_luffy_01.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Veast</span></a><a class="nav-page-title" href="/"><span class="site-name">企业级LLM推理集群的构建</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">企业级LLM推理集群的构建</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-08T14:11:05.000Z" title="发表于 2025-06-08 22:11:05">2025-06-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-06-19T12:25:42.102Z" title="更新于 2025-06-19 20:25:42">2025-06-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/">AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/LLM/">LLM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。</p>
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/static_luffy_01.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Veast</span></a><a class="nav-page-title" href="/"><span class="site-name">企业级LLM推理集群的构建</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">企业级LLM推理集群的构建</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-08T14:11:05.000Z" title="发表于 2025-06-08 22:11:05">2025-06-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-06-29T15:15:56.390Z" title="更新于 2025-06-29 23:15:56">2025-06-29</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/">AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/LLM/">LLM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。</p>
 <p>挖一个大坑，系统性的分多个章节整理一下具体内容。</p>
 <h1 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h1><blockquote>
 <p>本博客所有原创内容，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 协议，转载请注明出处。</p>
