@@ -1,0 +1,281 @@
+// ===========================================
+// Modern Flat Design Enhancements
+// 轻微扁平化 + 博客页面美化
+// ===========================================
+
+// 轻微的扁平化设计
+.modern-flat
+  // 减少阴影强度，但保留层次感
+  .card-shadow-light
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important
+  
+  .card-shadow-medium
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important
+
+// 博客页面整体优化
+body
+  // 改善整体字体渲染
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  
+  // 稍微增加行高提升可读性
+  line-height: 1.7
+
+// 首页文章卡片优化
+#recent-posts .recent-post-item
+  // 轻微减少圆角，更现代
+  border-radius: 8px !important
+  
+  // 优化阴影
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important
+  transition: all 0.3s ease
+  
+  &:hover
+    // 悬停时稍微上移，但保持温和
+    transform: translateY(-2px)
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important
+  
+  // 优化文章标题
+  .recent-post-info .article-title
+    font-weight: 600
+    letter-spacing: -0.02em
+    margin-bottom: 8px
+  
+  // 改善元信息显示
+  .article-meta-wrap
+    margin-top: 12px
+    opacity: 0.8
+    font-size: 0.9em
+
+// 文章页面内容优化
+#post
+  // 文章标题优化
+  .post-title
+    font-weight: 700
+    letter-spacing: -0.03em
+    line-height: 1.3
+    margin-bottom: 24px
+  
+  // 文章内容区域
+  .post-content
+    // 标题层次优化
+    h1, h2, h3, h4, h5, h6
+      margin-top: 2em
+      margin-bottom: 1em
+      font-weight: 600
+      letter-spacing: -0.02em
+      
+    h1
+      font-size: 2em
+      border-bottom: 3px solid var(--theme-color)
+      padding-bottom: 8px
+      
+    h2
+      font-size: 1.6em
+      border-left: 4px solid var(--theme-color)
+      padding-left: 16px
+      
+    h3
+      font-size: 1.3em
+      color: var(--theme-color)
+    
+    // 段落优化
+    p
+      margin-bottom: 1.5em
+      text-align: justify
+      
+    // 列表优化
+    ul, ol
+      margin: 1.5em 0
+      padding-left: 2em
+      
+      li
+        margin-bottom: 0.5em
+        line-height: 1.8
+    
+    // 引用块优化
+    blockquote
+      border-left: 4px solid var(--theme-color)
+      background: rgba(73, 177, 245, 0.05)
+      padding: 20px 24px
+      margin: 2em 0
+      border-radius: 4px
+      font-style: italic
+      
+    // 代码块优化
+    pre
+      border-radius: 6px !important
+      padding: 20px !important
+      margin: 1.5em 0 !important
+      
+    code
+      border-radius: 3px !important
+      padding: 2px 6px !important
+      
+    // 图片优化
+    img
+      border-radius: 8px
+      margin: 1.5em auto
+      max-width: 100%
+      height: auto
+
+// 侧边栏优化
+#aside-content
+  // 公告卡片优化 - 移除抖动动画，保持静态
+  .card-announcement
+    .item-headline i
+      // 移除所有动画效果，保持静态
+      animation: none !important
+      transform: none !important
+      // 使用主题色，与其他卡片图标保持一致
+      color: var(--theme-color) !important
+  .card-widget
+    border-radius: 8px !important
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important
+    margin-bottom: 20px
+    padding: 20px
+    
+    .item-headline
+      font-weight: 600
+      margin-bottom: 16px
+      
+    // 作者信息卡片
+    &.card-author
+      text-align: center
+      
+      .card-author-name
+        font-weight: 700
+        margin-top: 12px
+        
+      .author-info__description
+        margin-top: 8px
+        opacity: 0.8
+        line-height: 1.6
+    
+    // 最新文章列表
+    &.card-recent-post
+      .card-recent-post-item
+        padding: 12px 0
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06)
+        
+        &:last-child
+          border-bottom: none
+          
+        .card-recent-post-info
+          .card-recent-post-title
+            font-weight: 500
+            line-height: 1.4
+            margin-bottom: 4px
+            
+          .card-recent-post-time
+            font-size: 0.85em
+            opacity: 0.7
+
+// 导航栏优化
+#nav
+  // 移除边框，让导航栏完全融入背景
+  
+  .site-name
+    font-weight: 700
+    
+  .menus_items
+    .menus_item
+      .menus_item_text
+        font-weight: 500
+        transition: color 0.3s ease
+
+// 页脚优化
+#footer
+  border-top: 1px solid rgba(0, 0, 0, 0.06)
+  background: rgba(248, 249, 250, 0.8)
+
+// 分页优化
+#pagination
+  .pagination
+    .page-number,
+    .extend
+      border-radius: 6px !important
+      margin: 0 4px
+      // 使用原有的尺寸保持对齐，但添加现代样式
+      width: 2.5em !important
+      height: 2.5em !important
+      line-height: 2.5em !important
+      padding: 0 !important
+      text-align: center !important
+      transition: all 0.3s ease
+      
+      &:hover
+        transform: translateY(-1px)
+
+// 标签优化
+.post-meta__tags
+  border-radius: 20px !important
+  padding: 4px 12px !important
+  font-size: 0.85em !important
+  font-weight: 500 !important
+  transition: all 0.3s ease !important
+  
+  &:hover
+    transform: translateY(-1px) !important
+
+// 响应式优化
++maxWidth768()
+  #recent-posts .recent-post-item
+    margin: 0 10px 20px 10px
+    
+  #post .post-content
+    h1, h2, h3, h4, h5, h6
+      margin-top: 1.5em
+      
+  #aside-content
+    margin-top: 20px
+
+// 深色模式适配
+[data-theme='dark']
+  #recent-posts .recent-post-item
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.03) !important
+    
+    &:hover
+      box-shadow: 0 8px 20px rgba(255, 255, 255, 0.06) !important
+  
+  #aside-content .card-widget
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.03) !important
+    
+  #footer
+    background: rgba(18, 18, 18, 0.8)
+    border-top: 1px solid rgba(255, 255, 255, 0.06)
+
+// 改善滚动条样式
+::-webkit-scrollbar
+  width: 8px
+  
+::-webkit-scrollbar-track
+  background: rgba(0, 0, 0, 0.05)
+  
+::-webkit-scrollbar-thumb
+  background: rgba(0, 0, 0, 0.2)
+  border-radius: 4px
+  
+  &:hover
+    background: rgba(0, 0, 0, 0.3)
+
+// 选择文本优化
+::selection
+  background: rgba(73, 177, 245, 0.2)
+  color: inherit
+
+// 链接悬停效果优化
+a
+  transition: color 0.3s ease
+  
+  &:hover
+    text-decoration: none
+
+// 按钮优化
+.btn
+  border-radius: 6px !important
+  font-weight: 500 !important
+  transition: all 0.3s ease !important
+  
+  &:hover
+    transform: translateY(-1px) !important 
