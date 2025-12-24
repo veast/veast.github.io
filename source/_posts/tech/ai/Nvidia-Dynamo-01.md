@@ -22,26 +22,26 @@ categories:
 
 
 2. NVIDIA Dynamo：继续看关键字，"推理框架"，"分布式环境"场景支持，支持"所有主流推理后端"，支持分离部署。  
-{% asset_img img-02.png "Dynamo Platform" %}
+{% asset_img img-02.png "Dynamo" %}
 
 
-3. NVIDIA Dynamo-Triton：Dynamo-Triton看起来暂时没有什么亮点，似乎只是直接把NVIDIA之前的Triton改了个名字。 
-{% asset_img img-03.png "Dynamo Platform" %}
+1. NVIDIA Dynamo-Triton：Dynamo-Triton看起来暂时没有什么亮点，似乎只是直接把NVIDIA之前的Triton改了个名字。 
+{% asset_img img-03.png "Dynamo Triton" %}
 
 
 然后官网也给了一张图，可以直观的看到上述三个产品的定位与关系：
-{% asset_img img-04.png "Dynamo Platform" %}
+{% asset_img img-04.png "Dynamo" %}
 
 
 题外话…对比dynamo在nvidia大陆和官方的文档，发现目前在大陆的介绍页，只有dynamo框架，没有dynamo平台介绍。
 https://developer.nvidia.com/dynamo，https://developer.nvidia.cn/dynamo
 
 再到github看下又说了什么，先看个大概，主要是NVIDIA Dynamo框架的内容：关键信息是这个"推理引擎无关"。
-{% asset_img img-05.png "Dynamo Platform" %}
+{% asset_img img-05.png "Dynamo" %}
  
 
 然后接下来是列举了Dynamo的几个主要特性：包含支持PD分离、LLM感知请求路由等，关键特性后文我们逐一展开。
-{% asset_img img-06.png "Dynamo Platform" %}
+{% asset_img img-06.png "Dynamo" %}
  
 
 ## 为什么需要Dynamo
@@ -56,7 +56,7 @@ Dynamo on the other hand, is for Distributed, multi-node, LLM-optimized inferenc
 
 ## Dynamo提供了什么能力
 
-{% asset_img img-07.png "Dynamo Platform" %}
+{% asset_img img-07.png "Dynamo" %}
 
 GPU Resource Planner: A planning and scheduling engine that monitors capacity and prefill activity in multi-node deployments to adjust GPU resources and allocate them across prefill and decode.
 

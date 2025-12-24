@@ -1,9 +1,8 @@
 ---
-title: Higress(01)——使用Higress作为LLM推理的接入层网关
-date: 2025-06-15 16:21:18
+title: AI时代的网关转型，全新形态：跨服务+跨实例+跨角色
+date: 2025-06-29 22:35:01
 tags:
   - Cloud Native for AI
-  - Higress
   - LLM Infer System
 categories:
   - 技术
@@ -11,6 +10,11 @@ categories:
 ---
 
 # 前言
+
+
+{% asset_img img-01.png "AI Gateway" %}
+
+# 参考链接
 
 
 # 版权声明
