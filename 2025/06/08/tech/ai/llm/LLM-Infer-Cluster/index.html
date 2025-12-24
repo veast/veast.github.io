@@ -1,0 +1,252 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>企业级LLM推理集群的构建 | Veast</title><meta name="author" content="Veast"><meta name="copyright" content="Veast"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。 挖一个大坑，系统性的分多个章节整理一下具体内容。 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="企业级LLM推理集群的构建">
+<meta property="og:url" content="http://veast.github.io/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/index.html">
+<meta property="og:site_name" content="Veast">
+<meta property="og:description" content="前言最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。 挖一个大坑，系统性的分多个章节整理一下具体内容。 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://veast.github.io/img/my-avatar.jpeg">
+<meta property="article:published_time" content="2025-06-08T14:11:05.000Z">
+<meta property="article:modified_time" content="2025-12-24T08:54:54.006Z">
+<meta property="article:author" content="Veast">
+<meta property="article:tag" content="ML System">
+<meta property="article:tag" content="LLM Infer">
+<meta property="article:tag" content="Cloud Native for AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://veast.github.io/img/my-avatar.jpeg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "企业级LLM推理集群的构建",
+  "url": "http://veast.github.io/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/",
+  "image": "http://veast.github.io/img/my-avatar.jpeg",
+  "datePublished": "2025-06-08T14:11:05.000Z",
+  "dateModified": "2025-12-24T08:54:54.006Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Veast",
+      "url": "http://veast.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="http://veast.github.io/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '企业级LLM推理集群的构建',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/static_luffy_01.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Veast</span></a><a class="nav-page-title" href="/"><span class="site-name">企业级LLM推理集群的构建</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">企业级LLM推理集群的构建</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-08T14:11:05.000Z" title="发表于 2025-06-08 22:11:05">2025-06-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-12-24T08:54:54.006Z" title="更新于 2025-12-24 16:54:54">2025-12-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/">AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/LLM/">LLM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。</p>
+<p>挖一个大坑，系统性的分多个章节整理一下具体内容。</p>
+<h1 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h1><blockquote>
+<p>本博客所有原创内容，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 协议，转载请注明出处。</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://veast.github.io">Veast</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://veast.github.io/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/">http://veast.github.io/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://veast.github.io" target="_blank">Veast</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ML-System/">ML System</a><a class="post-meta__tags" href="/tags/LLM-Infer/">LLM Infer</a><a class="post-meta__tags" href="/tags/Cloud-Native-for-AI/">Cloud Native for AI</a></div><div class="post-share"><div class="social-share" data-image="/img/my-avatar.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/02/tech/ai/Nvidia-Dynamo-01/" title="Nvidia Dynamo, 高效的LLM分布式推理框架"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Nvidia Dynamo, 高效的LLM分布式推理框架</div></div><div class="info-2"><div class="info-item-1">【本文持续更新中..】内容目前基于2025.05及之前的内容整理总结，请注意时效性。 概览先了解一下dynamo是什么东西，到官网看一下官方介绍，可以看到三个dynamo相关的概念，我们逐个看下介绍：  NVIDIA Dynamo Platform：关键字已经标出来了，是一个”推理平台”，支持”任何框架、架构、部署规模”的模型。      NVIDIA Dynamo：继续看关键字，”推理框架”，”分布式环境”场景支持，支持”所有主流推理后端”，支持分离部署。      NVIDIA...</div></div></div></a><a class="pagination-related" href="/2025/06/15/tech/gateway/Higress-01/" title="Higress(01)——使用Higress作为LLM推理的接入层网关"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Higress(01)——使用Higress作为LLM推理的接入层网关</div></div><div class="info-2"><div class="info-item-1">前言踩坑记录1. 长文本压测，部分请求处于等待队列，3min后中断检查higress-gateway日志，发现报错信息&quot;response_code_detail&quot;: &quot;stream_idle_timeout&quot;，官方文档没找到相关说明，翻了下各个config，在higress-config配置文件中找到相关配置data.higress.downstream.idleTimeout=180，决定了下游的闲置超时时间，修改该配置后问题解决 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/02/tech/ai/Nvidia-Dynamo-01/" title="Nvidia Dynamo, 高效的LLM分布式推理框架"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-02</div><div class="info-item-2">Nvidia Dynamo, 高效的LLM分布式推理框架</div></div><div class="info-2"><div class="info-item-1">【本文持续更新中..】内容目前基于2025.05及之前的内容整理总结，请注意时效性。 概览先了解一下dynamo是什么东西，到官网看一下官方介绍，可以看到三个dynamo相关的概念，我们逐个看下介绍：  NVIDIA Dynamo Platform：关键字已经标出来了，是一个”推理平台”，支持”任何框架、架构、部署规模”的模型。      NVIDIA Dynamo：继续看关键字，”推理框架”，”分布式环境”场景支持，支持”所有主流推理后端”，支持分离部署。      NVIDIA...</div></div></div></a><a class="pagination-related" href="/2025/09/12/tech/cloud-native/LeaderWorkerSet/" title="使用LeaderWorkerSet，以云原生的姿态部署LLM多机推理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-12</div><div class="info-item-2">使用LeaderWorkerSet，以云原生的姿态部署LLM多机推理</div></div><div class="info-2"><div class="info-item-1">前言参考链接 https://github.com/kubernetes-sigs/lws  版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a><a class="pagination-related" href="/2025/12/24/tech/ai/llm/DeepGEMM/" title="模型启动加速篇——DeepGEMM预编译缓存"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-12-24</div><div class="info-item-2">模型启动加速篇——DeepGEMM预编译缓存</div></div><div class="info-2"><div class="info-item-1">概览随着模型越来越大，模型启动耗时越来越久，在一些紧急扩容场景、推理部署调试场景，受制于模型启动耗时，影响效率甚至影响收入，所以模型启动加速也是一个重要的课题。 这一篇分享下如何通过DeepGEMM预编译缓存来实现启动加速。 DeepGEMM(General Matrix Multiplication)，是DeepSeek研发团队专为DeepSeek优化的高性能矩阵乘法库，特别针对FP8精度做了深度优化。 DeepGEMM kernel不是提前编译好的固定程序，会根据实际运行的模型尺寸（包括模型结构、并行策略、精度等）动态生成。 所以默认在模型启动时需要对DeepGEMM进行JIT，而我们对于同一个模型和启动参数，自然可以缓存下来DeepGEMM编译后的内容，用于下一次启动加速。 启动耗时以DeepSeek-V3.1-Terminus为例，我们在一次启动耗时可能达到8min多。其中DeepGEMM JIT达到了6min多。    阶段 耗时 说明    服务器初始化 + 分布式通信 ~12s 配置加载、8 GPU worker...</div></div></div></a><a class="pagination-related" href="/2025/12/14/tech/ai/llm/HiCache/" title="HiCache，KVCache的多级缓存"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-12-14</div><div class="info-item-2">HiCache，KVCache的多级缓存</div></div><div class="info-2"><div class="info-item-1">概览应用HiCache使用L2 CacheHiCache使用MoonCake作为存储后端，开启L3 Cache实践结果源码学习参考链接https://docs.sglang.io/advanced_features/hicache_design.html https://kvcache-ai.github.io/Mooncake/getting_started/examples/sglang-integration/hicache-integration-v1.html https://lmsys.org/blog/2025-09-10-sglang-hicache/ 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a><a class="pagination-related" href="/2025/07/02/tech/ai/llm/Nvidia-Dynamo-02/" title="Nvidia Dynamo实践"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-07-02</div><div class="info-item-2">Nvidia Dynamo实践</div></div><div class="info-2"><div class="info-item-1">概览参考链接https://developer.nvidia.com/dynamo https://github.com/ai-dynamo/dynamo# https://github.com/ramanahm1/dynamo-learnings https://cloud.tencent.com/developer/article/2515122?policyId=20240001&amp;frompage=seopage https://mp.weixin.qq.com/s/t9rm_rG2NwXaZLe_SF5_hg 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a><a class="pagination-related" href="/2025/06/29/tech/gateway/AI-Gateway/" title="AI时代的网关转型，全新形态：跨服务+跨实例+跨角色"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-29</div><div class="info-item-2">AI时代的网关转型，全新形态：跨服务+跨实例+跨角色</div></div><div class="info-2"><div class="info-item-1">前言  参考链接版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/my-avatar.jpeg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Veast</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/veast"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">人生何处不相逢！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">版权声明</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/24/tech/cloud-native/k8s-volume-02/" title="无标题">无标题</a><time datetime="2025-12-24T08:54:54.008Z" title="发表于 2025-12-24 16:54:54">2025-12-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/24/tech/cloud-native/k8s-volume-01/" title="无标题">无标题</a><time datetime="2025-12-24T08:54:54.008Z" title="发表于 2025-12-24 16:54:54">2025-12-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/24/tech/ai/llm/AIBrix-01/" title="无标题">无标题</a><time datetime="2025-12-24T08:54:54.004Z" title="发表于 2025-12-24 16:54:54">2025-12-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/24/tech/ai/llm/DeepGEMM/" title="模型启动加速篇——DeepGEMM预编译缓存">模型启动加速篇——DeepGEMM预编译缓存</a><time datetime="2025-12-24T08:02:55.000Z" title="发表于 2025-12-24 16:02:55">2025-12-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/14/tech/ai/llm/HiCache/" title="HiCache，KVCache的多级缓存">HiCache，KVCache的多级缓存</a><time datetime="2025-12-14T08:46:18.000Z" title="发表于 2025-12-14 16:46:18">2025-12-14</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2025 By Veast</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': '',
+      'data-repo-id': '',
+      'data-category-id': '',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
