@@ -118,6 +118,7 @@ Transformer是模型的物理结构，而Prefill-Decode是模型在推理阶段�
 2. 高带宽卡：Decode阶段，提升TPOT
 3. 模型量化，提升QPS，E2E
 4. kv cache缓存池，提升QPS、E2E、TTFT
+5. 推测解码：通常框架内置支持，提升TPOT
 
 模型可靠性：
 1. 负载均衡
