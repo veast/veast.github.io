@@ -1,0 +1,329 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Transformer深度解析与通俗理解 | Veast</title><meta name="author" content="Veast"><meta name="copyright" content="Veast"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言之前ChatGPT横空出世，顺应潮流从推荐系统转向LLM，于是半知半解的学习了《Attention is all you need》，这么久过去了，总想重新整理下思路，于是写下这篇文章。 解析与理解为什么为什么会出现Transformer？在这之前，是RNN循环神经网络，它有两个问题，第一个是健忘，越往后的词，跟最开始的词的信息关系就变得很弱。第二个是慢，没有办法并行计算。那Transform">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Transformer深度解析与通俗理解">
+<meta property="og:url" content="http://veast.github.io/2026/02/24/tech/ai/llm/Transformer/index.html">
+<meta property="og:site_name" content="Veast">
+<meta property="og:description" content="前言之前ChatGPT横空出世，顺应潮流从推荐系统转向LLM，于是半知半解的学习了《Attention is all you need》，这么久过去了，总想重新整理下思路，于是写下这篇文章。 解析与理解为什么为什么会出现Transformer？在这之前，是RNN循环神经网络，它有两个问题，第一个是健忘，越往后的词，跟最开始的词的信息关系就变得很弱。第二个是慢，没有办法并行计算。那Transform">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://veast.github.io/img/my-avatar.jpeg">
+<meta property="article:published_time" content="2026-02-24T07:02:30.000Z">
+<meta property="article:modified_time" content="2026-02-24T09:25:34.887Z">
+<meta property="article:author" content="Veast">
+<meta property="article:tag" content="ML System">
+<meta property="article:tag" content="LLM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://veast.github.io/img/my-avatar.jpeg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Transformer深度解析与通俗理解",
+  "url": "http://veast.github.io/2026/02/24/tech/ai/llm/Transformer/",
+  "image": "http://veast.github.io/img/my-avatar.jpeg",
+  "datePublished": "2026-02-24T07:02:30.000Z",
+  "dateModified": "2026-02-24T09:25:34.887Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Veast",
+      "url": "http://veast.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="http://veast.github.io/2026/02/24/tech/ai/llm/Transformer/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Transformer深度解析与通俗理解',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/static_luffy_01.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Veast</span></a><a class="nav-page-title" href="/"><span class="site-name">Transformer深度解析与通俗理解</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">Transformer深度解析与通俗理解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-02-24T07:02:30.000Z" title="发表于 2026-02-24 15:02:30">2026-02-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-02-24T09:25:34.887Z" title="更新于 2026-02-24 17:25:34">2026-02-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/">AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/AI/LLM/">LLM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>之前ChatGPT横空出世，顺应潮流从推荐系统转向LLM，于是半知半解的学习了《Attention is all you need》，这么久过去了，总想重新整理下思路，于是写下这篇文章。</p>
+<h1 id="解析与理解"><a href="#解析与理解" class="headerlink" title="解析与理解"></a>解析与理解</h1><h2 id="为什么"><a href="#为什么" class="headerlink" title="为什么"></a>为什么</h2><p>为什么会出现Transformer？在这之前，是RNN循环神经网络，它有两个问题，第一个是健忘，越往后的词，跟最开始的词的信息关系就变得很弱。第二个是慢，没有办法并行计算。<br>那Transformer的思路就是，每个词自己决定想听哪个词，想关注谁。</p>
+<h2 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h2><img src="/2026/02/24/tech/ai/llm/Transformer/img-01.jpg" class="" title="模型结构">
+
+
+<h3 id="Encoder"><a href="#Encoder" class="headerlink" title="Encoder"></a>Encoder</h3><p>理解输入，将输入序列转化为包含上下文信息的向量表示。<br>从模型结构里看，由6个block堆叠而成，每一层主要包含两个子层，分别是MHA以及FFN，MHA是让词与词之间交流，理解上下文，FFN是对每个位置的信息进行独立强化。</p>
+<h3 id="Decoder"><a href="#Decoder" class="headerlink" title="Decoder"></a>Decoder</h3><p>产生输出，根据Encoder的信息和已经生成的单词，预测下一个。<br>相比较Encoder，多了一个Masked MHA，主要是限制在生成第n个词时，不能看后面的词。</p>
+<h3 id="Attention"><a href="#Attention" class="headerlink" title="Attention"></a>Attention</h3><p>注意力机制的核心，多个词相互认识，建立连接。</p>
+<h3 id="MLP-FFN"><a href="#MLP-FFN" class="headerlink" title="MLP&#x2F;FFN"></a>MLP&#x2F;FFN</h3><p>传统MLP，内部处理，把信息转换为模型内部的知识表达。</p>
+<h2 id="模型计算过程"><a href="#模型计算过程" class="headerlink" title="模型计算过程"></a>模型计算过程</h2><h3 id="q是“当下的搜索意图”"><a href="#q是“当下的搜索意图”" class="headerlink" title="q是“当下的搜索意图”"></a>q是“当下的搜索意图”</h3><p>它代表了此时此刻这个词，对过去所有信息的“渴求”。以“我爱吃”这个输入为例，当模型在处理“爱”时，q的意思是：“请给我来点能做我宾语的名词！”当模型在处理“吃”时，q的意思是：“请给我来点能被吃的食物！”。</p>
+<h3 id="k是“对外展示的标签”"><a href="#k是“对外展示的标签”" class="headerlink" title="k是“对外展示的标签”"></a>k是“对外展示的标签”</h3><p>它代表了过去生成的每一个词，挂在自己脑门上、用来响应搜索意图的索引信息。它不包含具体含义，只负责回答“是不是”。以“爱”这个词为例：当后面的q“吃”发出“寻找语境”的信号时，k“爱”举起牌子说：“看这里！我是表达喜好的动词，我能解释你为什么吃！”</p>
+<h3 id="v是“内容，是信息实际的载体”"><a href="#v是“内容，是信息实际的载体”" class="headerlink" title="v是“内容，是信息实际的载体”"></a>v是“内容，是信息实际的载体”</h3><p>它代表了匹配成功后，真正被q拿走并融合进新语境里的语义干货（实际上经过softmax，并不是0&#x2F;1的拿走，而是比例）。它是信息的载体。以“爱”这个词为例：一旦q“吃”和k“爱”确认匹配，v“爱”就会被带走。v“爱”的内容是：“强烈正向情感特征向量”。结果：这个特征注入到“吃”里，模型就懂了：接下来的预测不是为了充饥，而是为了享受美味。</p>
+<h2 id="核心"><a href="#核心" class="headerlink" title="核心"></a>核心</h2><h3 id="自注意力Self-Attention"><a href="#自注意力Self-Attention" class="headerlink" title="自注意力Self Attention"></a>自注意力Self Attention</h3><p>让模型在处理一个词时，同时关注句子中所有其他的词，并根据相关性分配权重。</p>
+<h3 id="多头注意力Multi-Head-Attention"><a href="#多头注意力Multi-Head-Attention" class="headerlink" title="多头注意力Multi-Head Attention"></a>多头注意力Multi-Head Attention</h3><p>上面自注意力机制，每个词去关注不同的词，而实际上会有多个Head，关注不同的方面，比如语法结构、情感等。<br>比如“苹果掉在地上，因为它熟透了”，如果是语法结构的头，会按照主谓关系，让谓语“掉”更关心主语“苹果”，如果是代词的头，会让“它”更关心“苹果”。<br>当然，在模型训练前没有人为给这些头去定义分配说谁负责什么方向，完全是训练过程中模型自己形成的能力。</p>
+<h3 id="位置编码"><a href="#位置编码" class="headerlink" title="位置编码"></a>位置编码</h3><p>顾名思义，“我爱你”和“你爱我”，是不一样的意思。</p>
+<h3 id="残差连接"><a href="#残差连接" class="headerlink" title="残差连接"></a>残差连接</h3><p>残差连接是何恺明在ResNet提出的，Transformer使用了这个技术，每一层输出时，会加上这一层的原始输入，这样可以避免原始信息的丢失。</p>
+<h3 id="缩放点积注意力"><a href="#缩放点积注意力" class="headerlink" title="缩放点积注意力"></a>缩放点积注意力</h3><p>在计算QK点积时，除以’$\sqrt{d_k}$’，避免高维度下点积值方差太大，导致Softmax趋于饱和后的梯度消失。</p>
+<h2 id="模型对比"><a href="#模型对比" class="headerlink" title="模型对比"></a>模型对比</h2><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">传统模型 (RNN&#x2F;LSTM)</th>
+<th align="left">Transformer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>计算方式</strong></td>
+<td align="left"><strong>串行</strong>（必须等上一个词算完）</td>
+<td align="left"><strong>并行</strong>（所有词同时进场计算）</td>
+</tr>
+<tr>
+<td align="left"><strong>长距离依赖</strong></td>
+<td align="left">弱（距离越远，信号越弱，易遗忘）</td>
+<td align="left"><strong>强</strong>（无论距离多远，一步直达）</td>
+</tr>
+<tr>
+<td align="left"><strong>信息视野</strong></td>
+<td align="left">局部&#x2F;单向（通常只看前文）</td>
+<td align="left"><strong>全局</strong>（Encoder 可同时看上下文）</td>
+</tr>
+<tr>
+<td align="left"><strong>训练效率</strong></td>
+<td align="left">低（无法充分利用 GPU 并行能力）</td>
+<td align="left"><strong>高</strong>（完美契合 GPU 矩阵运算）</td>
+</tr>
+<tr>
+<td align="left"><strong>位置感知</strong></td>
+<td align="left">隐式（靠处理顺序体现）</td>
+<td align="left"><strong>显式</strong>（通过位置编码 Positional Encoding）</td>
+</tr>
+</tbody></table>
+<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><h2 id="Transformer变体"><a href="#Transformer变体" class="headerlink" title="Transformer变体"></a>Transformer变体</h2><h3 id="仅Encoder"><a href="#仅Encoder" class="headerlink" title="仅Encoder"></a>仅Encoder</h3><p>代表作：Bert</p>
+<h3 id="仅Decoder"><a href="#仅Decoder" class="headerlink" title="仅Decoder"></a>仅Decoder</h3><p>代表作：GPT系列</p>
+<h3 id="MoE"><a href="#MoE" class="headerlink" title="MoE"></a>MoE</h3><p>改造了MLP层，标准Transformer，巨大的MLP，不管输入是什么，所有神经元都要参与计算。而MoE，把MLP拆成了多个MLP，称之为专家（Expert），然后引入了一个Router，来决策不同的问题由不同的Expert来处理。<br>这样模型参数可以巨大，每次推理只激活一部分参数。</p>
+<h1 id="几个问题"><a href="#几个问题" class="headerlink" title="几个问题"></a>几个问题</h1><p>通过问题，可以更好的理解概念，拓展思路</p>
+<h2 id="KVCache与Transformer的关系是什么？"><a href="#KVCache与Transformer的关系是什么？" class="headerlink" title="KVCache与Transformer的关系是什么？"></a>KVCache与Transformer的关系是什么？</h2><p>KV Cache是针对Transformer Decode过程的一种工程优化手段，并非模型架构本身的数学定义。</p>
+<h2 id="我们经常提到的Prefill-Decode与Transformer的关系是什么？"><a href="#我们经常提到的Prefill-Decode与Transformer的关系是什么？" class="headerlink" title="我们经常提到的Prefill-Decode与Transformer的关系是什么？"></a>我们经常提到的Prefill-Decode与Transformer的关系是什么？</h2><p>Transformer是模型的物理结构，而Prefill-Decode是模型在推理阶段的两个不同动作。<br>由于现在主流是纯Decoder模型，我们以此为例，那模型推理时，Prefill会把Prompt全部喂入，计算KVCache，Decode阶段则逐个词计算，同时也保存新的词的KVCache。</p>
+<h2 id="LLM大模型中，模型大小主要由哪些部分决定？"><a href="#LLM大模型中，模型大小主要由哪些部分决定？" class="headerlink" title="LLM大模型中，模型大小主要由哪些部分决定？"></a>LLM大模型中，模型大小主要由哪些部分决定？</h2><p>主要由MLP层决定，attention占用较小。</p>
+<h2 id="LLM大模型，我们聊到精度的时候，指的是什么？"><a href="#LLM大模型，我们聊到精度的时候，指的是什么？" class="headerlink" title="LLM大模型，我们聊到精度的时候，指的是什么？"></a>LLM大模型，我们聊到精度的时候，指的是什么？</h2><p>权重与激活值，有的模型会标注比如DeepSeek-V3.2为例，BF16·F32·F8_E4M3，权重FP8保存，激活值精度BF16，涉及Softmax使用F32。</p>
+<h2 id="对于LLM推理系统，可能存在的优化是什么？"><a href="#对于LLM推理系统，可能存在的优化是什么？" class="headerlink" title="对于LLM推理系统，可能存在的优化是什么？"></a>对于LLM推理系统，可能存在的优化是什么？</h2><p>模型启动：</p>
+<ol>
+<li>镜像预热&#x2F;缓存</li>
+<li>模型文件预热&#x2F;缓存，基于RDMA或者GPU Direct RDMA的模型文件传输加速</li>
+<li>模型文件并行加载</li>
+<li>DeepGEMM预编译缓存</li>
+<li>模型量化</li>
+</ol>
+<p>模型推理：</p>
+<ol>
+<li>高算力卡：Prefill阶段，提升TTFT</li>
+<li>高带宽卡：Decode阶段，提升TPOT</li>
+<li>模型量化，提升QPS，E2E</li>
+<li>kv cache缓存池，提升QPS、E2E、TTFT</li>
+<li>推测解码：通常框架内置支持，提升TPOT</li>
+</ol>
+<p>模型可靠性：</p>
+<ol>
+<li>负载均衡</li>
+<li>服务降级</li>
+</ol>
+<h1 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h1><blockquote>
+<p>本博客所有原创内容，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 协议，转载请注明出处。</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://veast.github.io">Veast</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://veast.github.io/2026/02/24/tech/ai/llm/Transformer/">http://veast.github.io/2026/02/24/tech/ai/llm/Transformer/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://veast.github.io" target="_blank">Veast</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ML-System/">ML System</a><a class="post-meta__tags" href="/tags/LLM/">LLM</a></div><div class="post-share"><div class="social-share" data-image="/img/my-avatar.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/01/05/tech/ai/EmbodiedAI/EmbodiedAI/" title="具身智能：当《机器人之梦》照进现实，商业的奇点在哪里？"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">具身智能：当《机器人之梦》照进现实，商业的奇点在哪里？</div></div><div class="info-2"><div class="info-item-1">《机器人之梦》重映了。我很喜欢这部电影，两年前首映的时候，也许谁也不会想到，仅在两年后的今天，那个“亲爱的机器人”可能就要真的来到你我的身边了。  最近，具身智能相关的技术或者模型层出不穷，从英伟达的Cosmos到蚂蚁开源的LingBot，再到Google的Genie 3，具身智能似乎一夜之间迎来了属于它的“GPT-3时刻”。今天这篇文章，我想从具身智能的概念、商业模式（包含市场及上下游）、到技术实现，尝试打开这个话题：在这个万亿级的赛道前夜，我们正处于什么位置？ 01 什么是具身智能？过去我们熟悉的AI（如ChatGPT、推荐算法），大多是“离身智能”，它们存在于服务器中，处理的是数字和符号。 而具身智能，核心在于“智能体”必须拥有一个物理载体（如人形机器人、自动驾驶汽车、机械臂），并能通过这个载体与物理世界进行实时交互。 简单来说，具身智能不仅要“会思考”，还要“能干活”。它必须理解并遵循物理世界的规律（比如重力、摩擦力），实现从“感知-决策”到“行动-反馈”的完整闭环。 02 关于技术架构：谁是打开潘多拉魔盒的最后一把钥匙架构一：分层架构“大脑 +...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/12/24/tech/ai/llm/DeepGEMM/" title="模型启动加速篇——DeepGEMM预编译缓存"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-12-24</div><div class="info-item-2">模型启动加速篇——DeepGEMM预编译缓存</div></div><div class="info-2"><div class="info-item-1">概览随着模型越来越大，模型启动耗时越来越久，在一些紧急扩容场景、推理部署调试场景，受制于模型启动耗时，影响效率甚至影响收入，所以模型启动加速也是一个重要的课题。 这一篇分享下如何通过DeepGEMM预编译缓存来实现启动加速。 DeepGEMM(General Matrix Multiplication)，是DeepSeek研发团队专为DeepSeek优化的高性能矩阵乘法库，特别针对FP8精度做了深度优化。 DeepGEMM kernel不是提前编译好的固定程序，会根据实际运行的模型尺寸（包括模型结构、并行策略、精度等）动态生成。 所以默认在模型启动时需要对DeepGEMM进行JIT，而我们对于同一个模型和启动参数，自然可以缓存下来DeepGEMM编译后的内容，用于下一次启动加速。 启动耗时以DeepSeek-V3.1-Terminus为例，我们在一次启动耗时可能达到8min多。其中DeepGEMM JIT达到了6min多。    阶段 耗时 说明    服务器初始化 + 分布式通信 ~12s 配置加载、8 GPU worker...</div></div></div></a><a class="pagination-related" href="/2025/06/08/tech/ai/llm/LLM-Infer-Cluster/" title="企业级LLM推理集群的构建"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-08</div><div class="info-item-2">企业级LLM推理集群的构建</div></div><div class="info-2"><div class="info-item-1">前言最近在从0搭建一个企业级的LLM的推理集群，从系统能力维度上来说，涉及了可靠性、性能、安全、监控等，从具体能力上来说，设计了服务网关、单机&#x2F;多机k8s部署方案、推理服务可靠性保障、服务部署加速等内容。 挖一个大坑，系统性的分多个章节整理一下具体内容。 版权声明 本博客所有原创内容，均采用 CC BY-NC-SA 4.0 协议，转载请注明出处。  </div></div></div></a><a class="pagination-related" href="/2025/06/02/tech/ai/llm/Nvidia-Dynamo-01/" title="Nvidia Dynamo, 高效的LLM分布式推理框架"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-02</div><div class="info-item-2">Nvidia Dynamo, 高效的LLM分布式推理框架</div></div><div class="info-2"><div class="info-item-1">【本文持续更新中..】内容目前基于2025.05及之前的内容整理总结，请注意时效性。 概览先了解一下dynamo是什么东西，到官网看一下官方介绍，可以看到三个dynamo相关的概念，我们逐个看下介绍：  NVIDIA Dynamo Platform：关键字已经标出来了，是一个”推理平台”，支持”任何框架、架构、部署规模”的模型。      NVIDIA Dynamo：继续看关键字，”推理框架”，”分布式环境”场景支持，支持”所有主流推理后端”，支持分离部署。      NVIDIA...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/my-avatar.jpeg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Veast</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/veast"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">人生何处不相逢！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%A3%E6%9E%90%E4%B8%8E%E7%90%86%E8%A7%A3"><span class="toc-number">2.</span> <span class="toc-text">解析与理解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88"><span class="toc-number">2.1.</span> <span class="toc-text">为什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84"><span class="toc-number">2.2.</span> <span class="toc-text">模型结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Encoder"><span class="toc-number">2.2.1.</span> <span class="toc-text">Encoder</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decoder"><span class="toc-number">2.2.2.</span> <span class="toc-text">Decoder</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Attention"><span class="toc-number">2.2.3.</span> <span class="toc-text">Attention</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MLP-FFN"><span class="toc-number">2.2.4.</span> <span class="toc-text">MLP&#x2F;FFN</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E8%AE%A1%E7%AE%97%E8%BF%87%E7%A8%8B"><span class="toc-number">2.3.</span> <span class="toc-text">模型计算过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#q%E6%98%AF%E2%80%9C%E5%BD%93%E4%B8%8B%E7%9A%84%E6%90%9C%E7%B4%A2%E6%84%8F%E5%9B%BE%E2%80%9D"><span class="toc-number">2.3.1.</span> <span class="toc-text">q是“当下的搜索意图”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#k%E6%98%AF%E2%80%9C%E5%AF%B9%E5%A4%96%E5%B1%95%E7%A4%BA%E7%9A%84%E6%A0%87%E7%AD%BE%E2%80%9D"><span class="toc-number">2.3.2.</span> <span class="toc-text">k是“对外展示的标签”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#v%E6%98%AF%E2%80%9C%E5%86%85%E5%AE%B9%EF%BC%8C%E6%98%AF%E4%BF%A1%E6%81%AF%E5%AE%9E%E9%99%85%E7%9A%84%E8%BD%BD%E4%BD%93%E2%80%9D"><span class="toc-number">2.3.3.</span> <span class="toc-text">v是“内容，是信息实际的载体”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83"><span class="toc-number">2.4.</span> <span class="toc-text">核心</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%B3%A8%E6%84%8F%E5%8A%9BSelf-Attention"><span class="toc-number">2.4.1.</span> <span class="toc-text">自注意力Self Attention</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9BMulti-Head-Attention"><span class="toc-number">2.4.2.</span> <span class="toc-text">多头注意力Multi-Head Attention</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81"><span class="toc-number">2.4.3.</span> <span class="toc-text">位置编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AE%8B%E5%B7%AE%E8%BF%9E%E6%8E%A5"><span class="toc-number">2.4.4.</span> <span class="toc-text">残差连接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="toc-number">2.4.5.</span> <span class="toc-text">缩放点积注意力</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94"><span class="toc-number">2.5.</span> <span class="toc-text">模型对比</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8"><span class="toc-number">3.</span> <span class="toc-text">延伸</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Transformer%E5%8F%98%E4%BD%93"><span class="toc-number">3.1.</span> <span class="toc-text">Transformer变体</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%85Encoder"><span class="toc-number">3.1.1.</span> <span class="toc-text">仅Encoder</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%85Decoder"><span class="toc-number">3.1.2.</span> <span class="toc-text">仅Decoder</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MoE"><span class="toc-number">3.1.3.</span> <span class="toc-text">MoE</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%87%A0%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">几个问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#KVCache%E4%B8%8ETransformer%E7%9A%84%E5%85%B3%E7%B3%BB%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">4.1.</span> <span class="toc-text">KVCache与Transformer的关系是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E4%BB%AC%E7%BB%8F%E5%B8%B8%E6%8F%90%E5%88%B0%E7%9A%84Prefill-Decode%E4%B8%8ETransformer%E7%9A%84%E5%85%B3%E7%B3%BB%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">4.2.</span> <span class="toc-text">我们经常提到的Prefill-Decode与Transformer的关系是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLM%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%EF%BC%8C%E6%A8%A1%E5%9E%8B%E5%A4%A7%E5%B0%8F%E4%B8%BB%E8%A6%81%E7%94%B1%E5%93%AA%E4%BA%9B%E9%83%A8%E5%88%86%E5%86%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">4.3.</span> <span class="toc-text">LLM大模型中，模型大小主要由哪些部分决定？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLM%E5%A4%A7%E6%A8%A1%E5%9E%8B%EF%BC%8C%E6%88%91%E4%BB%AC%E8%81%8A%E5%88%B0%E7%B2%BE%E5%BA%A6%E7%9A%84%E6%97%B6%E5%80%99%EF%BC%8C%E6%8C%87%E7%9A%84%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">4.4.</span> <span class="toc-text">LLM大模型，我们聊到精度的时候，指的是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8ELLM%E6%8E%A8%E7%90%86%E7%B3%BB%E7%BB%9F%EF%BC%8C%E5%8F%AF%E8%83%BD%E5%AD%98%E5%9C%A8%E7%9A%84%E4%BC%98%E5%8C%96%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">4.5.</span> <span class="toc-text">对于LLM推理系统，可能存在的优化是什么？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E"><span class="toc-number">5.</span> <span class="toc-text">版权声明</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/24/tech/ai/llm/Transformer/" title="Transformer深度解析与通俗理解">Transformer深度解析与通俗理解</a><time datetime="2026-02-24T07:02:30.000Z" title="发表于 2026-02-24 15:02:30">2026-02-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/01/05/tech/ai/EmbodiedAI/EmbodiedAI/" title="具身智能：当《机器人之梦》照进现实，商业的奇点在哪里？">具身智能：当《机器人之梦》照进现实，商业的奇点在哪里？</a><time datetime="2026-01-05T11:58:56.000Z" title="发表于 2026-01-05 19:58:56">2026-01-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/31/personal/SayByeTo2025/" title="2025年度总结——你念旧，但也从未停止向前走的脚步">2025年度总结——你念旧，但也从未停止向前走的脚步</a><time datetime="2025-12-31T09:45:26.000Z" title="发表于 2025-12-31 17:45:26">2025-12-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/24/tech/ai/llm/DeepGEMM/" title="模型启动加速篇——DeepGEMM预编译缓存">模型启动加速篇——DeepGEMM预编译缓存</a><time datetime="2025-12-24T08:02:55.000Z" title="发表于 2025-12-24 16:02:55">2025-12-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/06/15/tech/gateway/Higress-02/" title="Higress(02)——基于文件实现Higress的AI路由配置">Higress(02)——基于文件实现Higress的AI路由配置</a><time datetime="2025-06-15T08:55:28.000Z" title="发表于 2025-06-15 16:55:28">2025-06-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2025 - 2026 By Veast</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': '',
+      'data-repo-id': '',
+      'data-category-id': '',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
